@@ -10,7 +10,7 @@ from server import PromptServer
 
 from .nodes import IMAGE_EXTENSIONS, collect_image_paths
 
-THUMB_SIZE = 160
+THUMB_MAX = 1024
 
 # The dialog runs in a child process so Tk never touches the server's event loop thread.
 DIALOG_SCRIPT = r"""
@@ -53,7 +53,8 @@ async def thumb(request):
     if not path.lower().endswith(IMAGE_EXTENSIONS) or not os.path.isfile(path):
         return web.Response(status=404)
     img = ImageOps.exif_transpose(Image.open(path))
-    img.thumbnail((THUMB_SIZE, THUMB_SIZE))
+    size = min(max(int(request.query.get("size", 256)), 64), THUMB_MAX)
+    img.thumbnail((size, size), Image.LANCZOS)
     buf = io.BytesIO()
-    img.convert("RGBA").save(buf, "WEBP", quality=80)
+    img.convert("RGBA").save(buf, "WEBP", quality=92)
     return web.Response(body=buf.getvalue(), content_type="image/webp", headers={"Cache-Control": "no-cache"})

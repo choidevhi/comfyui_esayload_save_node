@@ -34,7 +34,7 @@ style.textContent = `
 .easyload-cell img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .easyload-cell span { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.65); font-size: 10px; padding: 1px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .easyload-grid.single { grid-template-columns: 1fr; }
-.easyload-grid.single .easyload-cell { aspect-ratio: auto; height: 100%; min-height: 160px; }
+.easyload-grid.single .easyload-cell { aspect-ratio: auto; height: 170px; }
 .easyload-saved { font: 11px monospace; color: #cfa; word-break: break-all; }
 `;
 document.head.appendChild(style);
@@ -166,13 +166,14 @@ function setupLoadImages(node) {
         const res = await api.fetchApi("/easyload/list", { method: "POST", body: JSON.stringify({ paths: pathsWidget.value }) });
         const { files } = await res.json();
         const stamp = Date.now();
+        const thumbSize = Math.round((files.length === 1 ? 512 : 160) * Math.max(window.devicePixelRatio || 1, 1));
         info.textContent = files.length ? `${files.length} image${files.length > 1 ? "s" : ""}` : "No images";
         grid.classList.toggle("single", files.length === 1);
         grid.replaceChildren(
             ...files.map((f) => {
                 const cell = el("div", "easyload-cell", { title: f });
                 const name = f.split(/[\\/]/).pop();
-                cell.append(el("img", "", { src: api.apiURL(`/easyload/thumb?path=${encodeURIComponent(f)}&t=${stamp}`), loading: "lazy", alt: name }), el("span", "", { textContent: name }));
+                cell.append(el("img", "", { src: api.apiURL(`/easyload/thumb?path=${encodeURIComponent(f)}&size=${thumbSize}&t=${stamp}`), loading: "lazy", alt: name }), el("span", "", { textContent: name }));
                 return cell;
             })
         );
