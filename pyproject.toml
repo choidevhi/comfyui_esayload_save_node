@@ -1,0 +1,8 @@
+[project]
+name = "comfyui_esayload_save_node"
+description = "Prompt switch, load images from any folder with their file names, and save images to any folder."
+version = "1.0.0"
+
+[tool.comfy]
+PublisherId = "choidevhi"
+DisplayName = "EasyLoad Save Node"
