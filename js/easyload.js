@@ -127,7 +127,14 @@ function setupPromptSwitch(node) {
     const widget = node.addDOMWidget("items", "easyload_prompts", root, {
         getValue: () => JSON.stringify(items),
         setValue: (v) => {
-            items = JSON.parse(v || "[]");
+            let parsed;
+            try {
+                parsed = JSON.parse(v || "[]");
+            } catch {
+                parsed = null;
+            }
+            if (!Array.isArray(parsed)) return;
+            items = parsed;
             render();
         },
         getMinHeight: () => 260,
@@ -228,8 +235,15 @@ app.registerExtension({
         };
 
         const onConfigure = nodeType.prototype.onConfigure;
-        nodeType.prototype.onConfigure = function () {
+        nodeType.prototype.onConfigure = function (info) {
             onConfigure?.apply(this, arguments);
+            // v1.0 saved [select, prompt_1..prompt_10]; turn it into the toggle list.
+            const values = info?.widgets_values;
+            if (nodeData.name === "EasyPromptSwitch" && typeof values?.[0] === "number") {
+                const items = values.slice(1).map((text, i) => ({ title: `Prompt ${i + 1}`, text: text ?? "", on: i + 1 === values[0] })).filter((item) => item.text || item.on);
+                this.widgets.find((w) => w.name === "items").value = JSON.stringify(items);
+                this.widgets.find((w) => w.name === "separator").value = ", ";
+            }
             this.easyloadRefresh?.();
             this.easyloadUpdateHint?.();
         };
