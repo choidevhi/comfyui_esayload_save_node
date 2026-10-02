@@ -19,18 +19,15 @@ INVALID_NAME_CHARS = re.compile(r'[\\/:*?"<>|\x00-\x1f]')
 class PromptSwitch:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {
-            "items": ("STRING", {"default": "[]"}),
-            "separator": ("STRING", {"default": ", "}),
-        }}
+        return {"required": {"items": ("STRING", {"default": "[]"})}}
 
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("prompt",)
     FUNCTION = "switch"
     CATEGORY = "easyload"
 
-    def switch(self, items, separator):
-        return (separator.join(item["text"] for item in json.loads(items) if item["on"] and item["text"].strip()),)
+    def switch(self, items):
+        return (next((item["text"] for item in json.loads(items) if item["on"]), ""),)
 
 
 def collect_image_paths(paths):

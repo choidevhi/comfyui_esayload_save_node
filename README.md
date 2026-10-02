@@ -5,7 +5,7 @@ ComfyUI custom nodes, category `easyload`.
 ## Prompt Switch (Easy)
 
 A list of prompts, each with a title, an on/off toggle, and text. **+ Add prompt** adds one, ✕ deletes it.
-Outputs the text of every prompt that is on, joined with `separator`. Keep one on to output just that one. No inputs.
+Only one prompt can be on: turning one on turns the others off. Outputs the text of the prompt that is on (empty if all are off). No inputs.
 
 ## Load Images From Path (Easy)
 

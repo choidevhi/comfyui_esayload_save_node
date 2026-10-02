@@ -88,7 +88,7 @@ function setupPromptSwitch(node) {
     root.append(bar, list);
     guardSaveKey(root);
 
-    const updateCount = () => (count.textContent = `${items.filter((i) => i.on).length} / ${items.length} on`);
+    const updateCount = () => (count.textContent = items.some((i) => i.on) ? `On: ${items.find((i) => i.on).title || `Prompt ${items.findIndex((i) => i.on) + 1}`}` : "All off");
 
     function render() {
         list.replaceChildren();
@@ -96,14 +96,18 @@ function setupPromptSwitch(node) {
             const box = el("div", "easyload-item" + (item.on ? "" : " off"));
             const head = el("div", "easyload-item-head");
             const toggle = el("div", "easyload-toggle" + (item.on ? " on" : ""), { title: "On / off" });
+            // Only one prompt can be on: turning one on turns the others off.
             toggle.onclick = () => {
-                item.on = !item.on;
-                toggle.classList.toggle("on", item.on);
-                box.classList.toggle("off", !item.on);
-                updateCount();
+                const on = !item.on;
+                items.forEach((other) => (other.on = false));
+                item.on = on;
+                render();
             };
             const title = el("input", "easyload-title", { value: item.title, placeholder: `Prompt ${i + 1}` });
-            title.oninput = () => (item.title = title.value);
+            title.oninput = () => {
+                item.title = title.value;
+                updateCount();
+            };
             const del = el("button", "easyload-del", { textContent: "✕", title: "Delete" });
             del.onclick = () => {
                 items.splice(i, 1);
@@ -119,7 +123,7 @@ function setupPromptSwitch(node) {
     }
 
     add.onclick = () => {
-        items.push({ title: "", text: "", on: true });
+        items.push({ title: "", text: "", on: !items.some((i) => i.on) });
         render();
         list.scrollTop = list.scrollHeight;
     };
@@ -135,6 +139,8 @@ function setupPromptSwitch(node) {
             }
             if (!Array.isArray(parsed)) return;
             items = parsed;
+            const first = items.findIndex((i) => i.on);
+            items.forEach((i, n) => (i.on = n === first));
             render();
         },
         getMinHeight: () => 260,
@@ -243,7 +249,6 @@ app.registerExtension({
             if (nodeData.name === "EasyPromptSwitch" && typeof values?.[0] === "number") {
                 const items = values.slice(1).map((text, i) => ({ title: `Prompt ${i + 1}`, text: text ?? "", on: i + 1 === values[0] })).filter((item) => item.text || item.on);
                 this.widgets.find((w) => w.name === "items").value = JSON.stringify(items);
-                this.widgets.find((w) => w.name === "separator").value = ", ";
             }
             this.easyloadRefresh?.();
             this.easyloadUpdateHint?.();
