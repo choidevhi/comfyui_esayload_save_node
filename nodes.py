@@ -11,25 +11,26 @@ from PIL.PngImagePlugin import PngInfo
 import folder_paths
 from comfy.cli_args import args
 
-PROMPT_SLOTS = 10
 IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff")
 SAVE_FORMATS = {"png": "PNG", "jpg": "JPEG", "webp": "WEBP"}
-INVALID_NAME_CHARS = re.compile(r'[\/:*?"<>|\x00-\x1f]')
+INVALID_NAME_CHARS = re.compile(r'[\\/:*?"<>|\x00-\x1f]')
 
 
 class PromptSwitch:
     @classmethod
     def INPUT_TYPES(s):
-        prompts = {f"prompt_{i}": ("STRING", {"multiline": True, "default": ""}) for i in range(1, PROMPT_SLOTS + 1)}
-        return {"required": {"select": ("INT", {"default": 1, "min": 1, "max": PROMPT_SLOTS}), **prompts}}
+        return {"required": {
+            "items": ("STRING", {"default": "[]"}),
+            "separator": ("STRING", {"default": ", "}),
+        }}
 
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("prompt",)
     FUNCTION = "switch"
     CATEGORY = "easyload"
 
-    def switch(self, select, **prompts):
-        return (prompts[f"prompt_{select}"],)
+    def switch(self, items, separator):
+        return (separator.join(item["text"] for item in json.loads(items) if item["on"] and item["text"].strip()),)
 
 
 def collect_image_paths(paths):
@@ -42,8 +43,6 @@ def collect_image_paths(paths):
             files += sorted(os.path.join(path, f) for f in os.listdir(path) if f.lower().endswith(IMAGE_EXTENSIONS))
         else:
             files.append(path)
-    if not files:
-        raise ValueError("No images found. Pick files or a folder first.")
     return files
 
 
@@ -59,8 +58,11 @@ class LoadImagesFromPaths:
     CATEGORY = "easyload"
 
     def load(self, paths):
+        files = collect_image_paths(paths)
+        if not files:
+            raise ValueError("No images found. Pick files or a folder first.")
         images, masks, names = [], [], []
-        for path in collect_image_paths(paths):
+        for path in files:
             img = ImageOps.exif_transpose(Image.open(path))
             images.append(torch.from_numpy(np.array(img.convert("RGB")).astype(np.float32) / 255.0)[None,])
             if "A" in img.getbands():
@@ -84,7 +86,7 @@ class SaveImageToPath:
         return {
             "required": {
                 "images": ("IMAGE",),
-                "directory": ("STRING", {"default": "", "placeholder": "Save folder (empty = ComfyUI output)"}),
+                "directory": ("STRING", {"default": "", "placeholder": "Folder name (inside output) or full path"}),
                 "filename": ("STRING", {"default": "image"}),
                 "prefix": ("STRING", {"default": ""}),
                 "suffix": ("STRING", {"default": ""}),
@@ -102,7 +104,8 @@ class SaveImageToPath:
     def save(self, images, directory, filename, prefix, suffix, extension, overwrite, prompt=None, extra_pnginfo=None):
         if extension not in SAVE_FORMATS:
             raise ValueError(f"Unsupported extension: {extension}")
-        directory = directory.strip().strip('"') or folder_paths.get_output_directory()
+        # A bare name lands inside output; an absolute path like C:\images replaces it.
+        directory = os.path.join(folder_paths.get_output_directory(), directory.strip().strip('"'))
         os.makedirs(directory, exist_ok=True)
         base = INVALID_NAME_CHARS.sub("_", f"{prefix}{filename}{suffix}").strip(" .") or "image"
 
@@ -128,7 +131,7 @@ class SaveImageToPath:
             else:
                 img.save(path, SAVE_FORMATS[extension], quality=95)
             saved.append(path)
-        return {"ui": {"text": saved}}
+        return {"ui": {"saved": saved}}
 
 
 NODE_CLASS_MAPPINGS = {
