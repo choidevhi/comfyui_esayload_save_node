@@ -1,0 +1,29 @@
+{
+  "name": "ComfyUI 전용 노드",
+  "summary": "토글 프롬프트 선택, 미리보기와 함께 경로에서 이미지·파일 이름 불러오기, 원하는 폴더·이름·확장자로 저장하는 ComfyUI 노드 3개",
+  "description": "로컬 ComfyUI에서 쓰려고 만든 커스텀 노드 묶음(카테고리 easyload)이다. 기본 노드로는 input 폴더 밖 이미지를 원래 이름 그대로 불러오거나, 원하는 폴더에 원하는 이름으로 저장하기가 번거로워서 만들었다.\n\nPrompt Switch는 제목과 토글이 달린 프롬프트 목록에서 한 번에 하나만 켜서 그 내용을 내보낸다. Load Images From Path는 파일 하나·여러 개·폴더 전체를 파일 탐색 창이나 직접 입력으로 고르고, 노드 안에서 미리보기(여러 장이면 스크롤되는 그리드)를 보여주며 이미지·마스크·파일 이름을 이미지마다 내보낸다.\n\nSave Image To Path는 폴더 이름만 적으면 output 안에, 전체 경로를 적으면 그곳에 저장한다. 파일 이름을 입력으로 받고 앞·뒤에 붙일 글자, 확장자(png/jpg/webp), 덮어쓰기 여부를 고른다. 세 노드 모두 따로 디자인했고, 노드 안에서 Ctrl+S를 눌러도 브라우저 저장 창 대신 워크플로 저장이 된다.\n\n추가 패키지 없이 ComfyUI만 있으면 동작한다. 파일 탐색 창은 ComfyUI가 실행 중인 PC에서 열리므로 로컬 사용을 전제로 한다.",
+  "status": "active",
+  "startedAt": "2026-10-02",
+  "targetAt": null,
+  "version": "1.2.0",
+  "stack": [
+    { "name": "Python", "group": "Backend" },
+    { "name": "ComfyUI 노드 API", "group": "Backend" },
+    { "name": "Pillow · NumPy · PyTorch", "group": "Backend" },
+    { "name": "aiohttp (ComfyUI 서버 경로)", "group": "Backend" },
+    { "name": "tkinter (파일 탐색 창)", "group": "Backend" },
+    { "name": "ComfyUI 프런트엔드 확장 (JavaScript, DOM 위젯)", "group": "Frontend" },
+    { "name": "Playwright (화면 확인)", "group": "Tools" },
+    { "name": "Git · GitHub", "group": "Tools" }
+  ],
+  "links": [
+    { "label": "GitHub", "href": "https://github.com/choidevhi/comfyui_esayload_save_node", "kind": "github" }
+  ],
+  "devlog": [
+    { "date": "2026-10-03", "title": "v1.2.0 프롬프트는 하나만 켜지게", "body": "여러 개를 켜서 이어 붙이던 방식을, 하나를 켜면 나머지가 꺼지는 방식으로 바꿨다. 원래 요구(여러 개 중 하나만 내보내기)에 맞춘 것." },
+    { "date": "2026-10-03", "title": "v1.1.2 미리보기 화질 개선", "body": "작은 썸네일을 늘려 보여주던 것을, 보이는 크기와 화면 배율에 맞는 크기로 받아오게 했다." },
+    { "date": "2026-10-02", "title": "v1.1.1 옛 워크플로 로드 오류 수정", "body": "v1.0 프롬프트 스위처가 든 워크플로를 열면 로드가 중단되던 문제를 고치고, 옛 값을 새 토글 목록으로 바꿔 읽게 했다." },
+    { "date": "2026-10-02", "title": "v1.1.0 미리보기·토글·디자인", "body": "불러온 이미지 미리보기 그리드(노드 안 스크롤), 제목 붙은 토글 프롬프트 목록, output 기준 저장 폴더, 노드 디자인, Ctrl+S 보호를 넣었다." },
+    { "date": "2026-10-02", "title": "v1.0.0 첫 버전", "body": "프롬프트 선택, 경로에서 이미지와 파일 이름 불러오기, 원하는 폴더에 이름·접두사·확장자를 정해 저장하는 노드 3개." }
+  ]
+}
